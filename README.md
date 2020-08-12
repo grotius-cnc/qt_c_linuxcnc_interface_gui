@@ -29,7 +29,11 @@ MAX_LIMIT = 10000
 MIN_LIMIT = -10000
 MAX_LIMIT = 10000
 
-5. start linuxcnc axis_mm config and start the qt application. 
+5. modify in the file ../QT_Lcnc_interface/display/variable.cpp 
+         std::string nmlfile="/home/user/linuxcnc/configs/common/linuxcnc.nml";
+         to your path :
+         std::string nmlfile="/yourdirecory/linuxcnc/configs/common/linuxcnc.nml";
+6. start linuxcnc axis_mm config and start the qt application. 
 
 Comments :
   1. The program read's gcode with "G0" for reading "g0" you have to expand or modity ./QT_Lcnc_interface/gcode/parse_gcode.h
