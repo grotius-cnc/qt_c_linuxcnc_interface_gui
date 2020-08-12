@@ -15,16 +15,15 @@ To use :
 
 4. Modify the axis_mm.ini file "../inuxcnc/configs/sim/axis/axis_mm.ini and replace in the file :
 
-# Name of display program, e.g., axis
-#DISPLAY = axis
+Name of display program, e.g., axis
 DISPLAY = QT_Lcnc_interface
 
-# Axes sections ---------------
+Axes sections ---------------
 [AXIS_X]
 MIN_LIMIT = -10000
 MAX_LIMIT = 10000
 
-# Joints sections -------------
+Joints sections -------------
 [JOINT_0]
 MIN_LIMIT = -10000
 MAX_LIMIT = 10000
