@@ -1,0 +1,137 @@
+xemc.cc is a C++ program that uses the relevant APIs. It is far from
+being tutorial documentation, but at present we don't *have* any
+tutorial documentation about using these APIs.
+
+(such documentation would be a great contribution to LinuxCNC. You
+could start with a new page on the wiki and later work with someone like
+John Thornton to get it integrated into the offical documentation. if
+you are so inclined)
+
+Anyway, here's a complete program that uses the C++ interface to log the
+position at about 10Hz:
+
+#include "emc.hh"
+#include "emc_nml.hh"
+#include <unistd.h>
+#include <iostream>
+#include <cstdlib>
+
+int main(int argc, char **argv) {
+if(argc < 2) { std::cerr << "Usage: " << argv[0] << " NMLFILE\n"; abort(); }
+const char *nmlfile = argv[1];
+RCS_STAT_CHANNEL *stat = new RCS_STAT_CHANNEL(emcFormat, "emcStatus", "xemc", nmlfile);
+while(1) {
+usleep(100*1000);
+if(!stat->valid()) continue;
+if(stat->peek() != EMC_STAT_TYPE) continue;
+EMC_STAT *emcStatus = static_cast<EMC_STAT*>(stat->get_address());
+std::cout << emcStatus->motion.traj.position.tran.x << " "
+<< emcStatus->motion.traj.position.tran.y << " "
+<< emcStatus->motion.traj.position.tran.z << "\n";
+}
+return 0;
+}
+
+In a run-in-place version of v2.5_branch it builds with this commandline:
+g++ -o nml-position-logger nml-position-logger.cc -Iinclude -Llib -lnml -llinuxcnc
+(and probably it will build from the package version if you have the -dev
+package installed, but I didn't test this)
+
+in master branch it looks like we have a regression so the commandline required is:
+g++ -o nml-position-logger nml-position-logger.cc -Iinclude -Isrc/emc/rs274ngc -Llib -lnml -llinuxcnc
+and a -dev package will not include at least one of the required headers.
+
+To use this program you would start linuxcnc with a traditional UI and
+then execute the program with the path to linuxcnc.nml. For example
+if you're at the top dirctory of a run-in-place linuxcnc:
+./nml-position-logger configs/common/linuxcnc.nml
+.. press ctrl-c to exit.
+
+To send commands you will use an RCS_CMD_CHANNEL:
+// command channel
+RCS_CMD_CHANNEL *cmd =
+new RCS_CMD_CHANNEL(emcFormat, "emcCommand", "xemc", file);
+int emcCommandSerialNumber = 0;
+and sending a command consists of something like
+EMC_TASK_ABORT m;
+m.serial_number = ++emcCommandSerialNumber;
+// most commands have other fields that must be initialized
+// such as EMC_TASK_SET_MODE::mode
+cmd->write(m);
+// at this point, many UIs have logic to "wait for task to receive
+// the command", though xemc does not
+
+To recieve error notices create an error connection
+// error channel
+NML *error = new NML(emcFormat, "emcError", "xemc", file);
+and poll it like yo usee in xemc.cc:updateError(). Note that when
+multiple UIs exist which poll for errors, only one of them will receive
+the error.
+
+The string "xemc" which occurs in several places is a magic string; you
+will just want to leave it unchanged.
+
+Jeff
+
+
+//
+
+const char *cstr = nmlfile.c_str();
+RCS_CMD_CHANNEL *c = new RCS_CMD_CHANNEL(emcFormat, "emcCommand", "xemc", cstr);
+if(!c) {
+    std::cout<<"command channel failed"<<std::endl;
+} else {
+    std::cout<<"command channel ok"<<std::endl;
+}
+
+RCS_STAT_CHANNEL *s = new RCS_STAT_CHANNEL(emcFormat, "emcCommand", "xemc", cstr);
+if(!s) {
+    std::cout<<"status channel failed"<<std::endl;
+} else {
+    std::cout<<"status channel ok"<<std::endl;
+}
+
+EMC_TASK_ABORT m;
+c->write(&m);
+
+
+
+//
+
+void MainWindow::on_actionopen_triggered()
+{
+#define NGC_FILES "Linuxcnc files(*.ngc)"
+
+    QFileDialog *dialog = new QFileDialog;
+    dialog->resize(500,250);
+    QString selectedFilter;
+
+    QString filename_open = QFileDialog::getOpenFileName(
+                dialog,
+                "Open",
+                QDir::currentPath(),
+                NGC_FILES,
+                &selectedFilter,
+                QFileDialog::DontUseNativeDialog); //this solves a dxf multiload problem
+
+    if(selectedFilter == NGC_FILES){
+
+        //first convert Qstring to standard string
+        std::string filename=filename_open.toStdString();
+        //convert standard string to char
+        const char *char_filename = filename.c_str();
+
+        const char *cstr = nmlfile.c_str();
+        RCS_CMD_CHANNEL *c = new RCS_CMD_CHANNEL(emcFormat, "emcCommand", "xemc", cstr);
+
+        //first close current loaded ngc file
+        EMC_TASK_PLAN_CLOSE close;
+        c->write(&close);
+
+        //load new ngc file
+        EMC_TASK_PLAN_OPEN open;
+        strcpy(open.file, char_filename);
+        c->write(&open);
+    }
+
+}
