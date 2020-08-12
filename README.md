@@ -30,9 +30,13 @@ MIN_LIMIT = -10000
 MAX_LIMIT = 10000
 
 5. modify in the file ../QT_Lcnc_interface/display/variable.cpp 
-         std::string nmlfile="/home/user/linuxcnc/configs/common/linuxcnc.nml";
-         to your path :
-         std::string nmlfile="/yourdirecory/linuxcnc/configs/common/linuxcnc.nml";
+
+std::string nmlfile="/home/user/linuxcnc/configs/common/linuxcnc.nml";
+
+To your path :
+
+std::string nmlfile="/yourdirecory/linuxcnc/configs/common/linuxcnc.nml";
+
 6. start linuxcnc axis_mm config and start the qt application. 
 
 Comments :
