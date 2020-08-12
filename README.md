@@ -45,5 +45,14 @@ Comments :
   3. Replacing emc-nml commands with halui read and write operations that are available, will solve this problem at tab 2 quickly, is what i suspect.
   4. Have fun with playing around with the program !!
   
+Future goal :
+ 
+I think to write a new motion controller in c++ including a kernel module to acces ethercat hardware and do real time motion operations.
+Have looked into the linuxcnc source code for several day's now, and i am not happy how some things are done.
+
+
+
+
+
 
 
